@@ -273,15 +273,71 @@ fi
 
 # Step 4: Create GitHub Release
 if $DO_GITHUB_RELEASE; then
-  echo "Creating GitHub Release..."
+  echo "🔍 Preparing GitHub Release..."
+  echo "Environment check:"
+  echo "  - Current directory: $(pwd)"
+  echo "  - GITHUB_TOKEN set: ${GITHUB_TOKEN:+yes}"
+  echo "  - GITHUB_TOKEN length: ${#GITHUB_TOKEN}"
+  
+  echo "Checking gh CLI availability..."
+  if ! command -v gh &> /dev/null; then
+    echo "❌ gh CLI not found in PATH"
+    echo "PATH: $PATH"
+    which gh || echo "gh command not available"
+    exit 1
+  fi
+  
+  echo "✓ gh CLI found: $(which gh)"
+  echo "  - gh version: $(gh --version)"
+  
+  echo "Testing gh CLI authentication..."
+  if ! gh auth status 2>&1; then
+    echo "❌ gh CLI authentication failed"
+    echo "Attempting to set auth token..."
+    echo "$GITHUB_TOKEN" | gh auth login --with-token 2>&1 || {
+      echo "❌ Failed to authenticate with provided token"
+      exit 1
+    }
+  fi
+  
+  echo "✓ gh CLI authenticated successfully"
+  
+  echo "Verifying release artifacts exist..."
   VERSION_NO_V=${NEW_VERSION#v}
-  gh release create $NEW_VERSION \
+  for file in "spec-kit-template-copilot-${NEW_VERSION}.zip" "spec-kit-template-claude-${NEW_VERSION}.zip" "spec-kit-template-gemini-${NEW_VERSION}.zip" "release_notes.md"; do
+    if [[ -f "$file" ]]; then
+      echo "  ✓ $file ($(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "unknown") bytes)"
+    else
+      echo "  ❌ $file - NOT FOUND"
+      exit 1
+    fi
+  done
+  
+  echo "🚀 Creating GitHub Release: $NEW_VERSION"
+  echo "Command: gh release create $NEW_VERSION \\"
+  echo "  spec-kit-template-copilot-${NEW_VERSION}.zip \\"
+  echo "  spec-kit-template-claude-${NEW_VERSION}.zip \\"
+  echo "  spec-kit-template-gemini-${NEW_VERSION}.zip \\"
+  echo "  --title \"Spec Kit Templates - $VERSION_NO_V\" \\"
+  echo "  --notes-file release_notes.md"
+  
+  if gh release create $NEW_VERSION \
     spec-kit-template-copilot-${NEW_VERSION}.zip \
     spec-kit-template-claude-${NEW_VERSION}.zip \
     spec-kit-template-gemini-${NEW_VERSION}.zip \
     --title "Spec Kit Templates - $VERSION_NO_V" \
-    --notes-file release_notes.md
-  echo "✓ GitHub Release created"
+    --notes-file release_notes.md 2>&1; then
+    echo "✅ GitHub Release created successfully"
+  else
+    echo "❌ GitHub Release creation failed with exit code $?"
+    echo "Checking if release already exists..."
+    if gh release view $NEW_VERSION 2>&1; then
+      echo "⚠️ Release $NEW_VERSION already exists"
+    else
+      echo "❌ Release does not exist, creation genuinely failed"
+      exit 1
+    fi
+  fi
 fi
 
 if $DO_CLEANUP; then
