@@ -21,6 +21,15 @@ jobs:
       contents: write
       
     steps:
+    - name: Debug workflow trigger
+      run: |
+        echo "🚀 Manual release workflow started"
+        echo "Version bump type: ${{ github.event.inputs.version_bump }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Actor: ${{ github.actor }}"
+        echo "Event name: ${{ github.event_name }}"
+        
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
@@ -28,9 +37,22 @@ jobs:
         
     - name: Setup GitHub CLI
       uses: actions/setup-gh@v1
+      
+    - name: Verify environment
+      run: |
+        echo "🔍 Verifying environment..."
+        echo "Current directory: $(pwd)"
+        echo "Git status:"
+        git status
+        echo "Available commands:"
+        which gh || echo "gh not found"
+        which bash || echo "bash not found"
+        echo "Script exists:"
+        ls -la .github/workflows/scripts/generate-release.sh || echo "Script not found"
         
     - name: Run release script
       run: |
+        echo "🛠️ Starting release script..."
         bash .github/workflows/scripts/generate-release.sh --version-bump ${{ github.event.inputs.version_bump }} --package --notes --github-release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
