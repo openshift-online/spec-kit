@@ -26,6 +26,9 @@ jobs:
       with:
         fetch-depth: 0
         
+    - name: Setup GitHub CLI
+      uses: actions/setup-gh@v1
+        
     - name: Run release script
       run: |
         bash .github/workflows/scripts/generate-release.sh --version-bump ${{ github.event.inputs.version_bump }} --package --notes --github-release
