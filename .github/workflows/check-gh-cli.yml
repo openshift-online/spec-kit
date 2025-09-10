@@ -1,0 +1,18 @@
+name: Check GH CLI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check_gh:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check if gh CLI is pre-installed
+      run: |
+        echo "Checking if gh CLI is available..."
+        which gh || echo "gh CLI not found"
+        gh --version || echo "gh command failed"
+        echo "PATH: $PATH"
+        ls -la /usr/bin/gh || echo "/usr/bin/gh not found"
+        ls -la /usr/local/bin/gh || echo "/usr/local/bin/gh not found"
