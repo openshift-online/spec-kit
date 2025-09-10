@@ -26,38 +26,15 @@ jobs:
         echo "🚀 Manual release workflow started"
         echo "Version bump type: ${{ github.event.inputs.version_bump }}"
         echo "Repository: ${{ github.repository }}"
-        echo "Ref: ${{ github.ref }}"
-        echo "Actor: ${{ github.actor }}"
-        echo "Event name: ${{ github.event_name }}"
         
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
         
-    - name: Setup GitHub CLI
-      run: |
-        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-        sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        sudo apt update
-        sudo apt install gh -y
-      
-    - name: Verify environment
-      run: |
-        echo "🔍 Verifying environment..."
-        echo "Current directory: $(pwd)"
-        echo "Git status:"
-        git status
-        echo "Available commands:"
-        which gh || echo "gh not found"
-        which bash || echo "bash not found"
-        echo "Script exists:"
-        ls -la .github/workflows/scripts/generate-release.sh || echo "Script not found"
-        
     - name: Run release script
       run: |
         echo "🛠️ Starting release script..."
-        bash .github/workflows/scripts/generate-release.sh --version-bump ${{ github.event.inputs.version_bump }} --package --notes --github-release
+        bash .github/workflows/scripts/generate-release.sh --version-bump ${{ github.event.inputs.version_bump }} --package --notes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
