@@ -291,6 +291,8 @@ if $DO_GITHUB_RELEASE; then
   echo "  - gh version: $(gh --version)"
   
   echo "Testing gh CLI authentication..."
+  # Note: gh CLI is pre-installed in GitHub Actions runners, but requires explicit authentication
+  # with the GITHUB_TOKEN even though it's available as an environment variable
   if ! gh auth status 2>&1; then
     echo "❌ gh CLI authentication failed"
     echo "Attempting to set auth token..."
